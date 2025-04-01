@@ -19,6 +19,8 @@ services:
     container_name: diary-nest
     environment:
       - PORT=${PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PASSWORD=${DB_PASSWORD}
     ports:
       - '3000:3000'
     depends_on:
