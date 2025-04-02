@@ -19,7 +19,7 @@ import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { User } from './user.entity';
 import { AuthTokenDTO } from 'src/auth/auth-token.dto';
 
-@Controller('users')
+@Controller('api/users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
