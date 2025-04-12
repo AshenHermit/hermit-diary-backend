@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDTO } from './create-user.dto';
-import { AuthService } from 'src/auth/auth.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { AuthenticatedRequest } from 'src/auth/jwt.strategy';
+import { AuthService } from 'src/api/auth/auth.service';
+import { JwtAuthGuard } from 'src/api/auth/jwt-auth.guard';
+import { AuthenticatedRequest } from 'src/api/auth/jwt.strategy';
 import { UpdateUserDTO } from './update-user.dto';
-import { AuthUserDTO } from 'src/auth/auth-user.dto';
+import { AuthUserDTO } from 'src/api/auth/auth-user.dto';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { User } from './user.entity';
-import { AuthTokenDTO } from 'src/auth/auth-token.dto';
+import { AuthTokenDTO } from 'src/api/auth/auth-token.dto';
+import { User } from 'src/database/entities/user.entity';
 
 @Controller('api/users')
 export class UsersController {
