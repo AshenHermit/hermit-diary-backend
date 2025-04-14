@@ -21,4 +21,11 @@ export class User {
   @ApiProperty({ example: 'Anna Lord', description: 'Имя пользователя' })
   @Column()
   name: string;
+
+  @ApiProperty({
+    example: 'google',
+    description: 'Сервис авторизации',
+  })
+  @Column({ default: 'email' })
+  service: 'email' | 'google' | 'vk' | 'yandex' | 'github';
 }

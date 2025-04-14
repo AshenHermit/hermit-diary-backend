@@ -3,19 +3,30 @@ import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
-import * as constants from './constants';
 import { UsersModule } from '../users/users.module';
+import { GoogleStrategy } from './google/auth-google.strategy';
+import { AuthController } from './auth.controller';
+import { AppConfigModule } from 'src/config/config.module';
+import { AppConfigService } from 'src/config/config.service';
 
 @Module({
   imports: [
+    AppConfigModule,
     forwardRef(() => UsersModule),
     PassportModule,
-    JwtModule.register({
-      secret: constants.secret,
-      signOptions: { expiresIn: '60m' },
+    JwtModule.registerAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => {
+        return {
+          secret: config.site.authSecret,
+          signOptions: { expiresIn: '60m' },
+        };
+      },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  controllers: [AuthController],
   exports: [AuthService],
 })
 export class AuthModule {}
