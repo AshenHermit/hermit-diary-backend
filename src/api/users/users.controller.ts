@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDTO } from './create-user.dto';
+import { CreateUserDTO } from '../auth/create-user.dto';
 import { AuthService } from 'src/api/auth/auth.service';
 import { JwtAuthGuard } from 'src/api/auth/jwt-auth.guard';
 import { AuthenticatedRequest } from 'src/api/auth/jwt.strategy';
@@ -21,22 +21,7 @@ import { User } from 'src/database/entities/user.entity';
 
 @Controller('api/users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly authService: AuthService,
-  ) {}
-
-  @Post('register')
-  @ApiOkResponse({ type: User })
-  async register(@Body() createUserDto: CreateUserDTO) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Post('login')
-  @ApiOkResponse({ type: AuthTokenDTO })
-  async login(@Body() body: AuthUserDTO) {
-    return this.authService.login(body.email, body.password);
-  }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

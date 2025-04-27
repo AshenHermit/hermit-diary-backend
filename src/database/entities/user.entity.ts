@@ -23,6 +23,13 @@ export class User {
   name: string;
 
   @ApiProperty({
+    example: 'https://site.com/picture.webp',
+    description: 'picture',
+  })
+  @Column({ default: '' })
+  picture: string;
+
+  @ApiProperty({
     example: 'google',
     description: 'Сервис авторизации',
   })

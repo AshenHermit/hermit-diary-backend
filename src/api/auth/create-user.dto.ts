@@ -16,4 +16,10 @@ export class CreateUserDTO {
 
   @ApiProperty({ example: 'Anna Lord', description: 'user name' })
   name: string;
+
+  @ApiProperty({
+    example: 'https://site.com/picture.webp',
+    description: 'picture',
+  })
+  picture: string;
 }

@@ -13,6 +13,12 @@ export class AppConfigService {
   get db() {
     return this.configService.get<AppConfig['db']>('db') ?? config().db;
   }
+  get storage() {
+    return (
+      this.configService.get<AppConfig['storage']>('storage') ??
+      config().storage
+    );
+  }
   get isProduction() {
     return (
       this.configService.get<AppConfig['nodeEnv']>('nodeEnv') == 'production'

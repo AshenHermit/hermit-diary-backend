@@ -12,7 +12,7 @@ import { AppConfigService } from 'src/config/config.service';
 @Module({
   imports: [
     AppConfigModule,
-    forwardRef(() => UsersModule),
+    UsersModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [AppConfigModule],
@@ -20,7 +20,7 @@ import { AppConfigService } from 'src/config/config.service';
       useFactory: (config: AppConfigService) => {
         return {
           secret: config.site.authSecret,
-          signOptions: { expiresIn: '60m' },
+          signOptions: { expiresIn: '30d' },
         };
       },
     }),

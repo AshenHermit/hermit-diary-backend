@@ -12,4 +12,13 @@ export class UpdateUserDTO {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty({
+    example: 'https://site.com/picture.webp',
+    description: 'user avatar',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  picture?: string;
 }

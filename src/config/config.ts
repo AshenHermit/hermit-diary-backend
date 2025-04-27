@@ -13,6 +13,10 @@ const config: () => AppConfig = () => ({
     commonDomain: process.env.COMMON_DOMAIN ?? 'localhost',
     host: process.env.SITE_HOST ?? 'http://localhost:3000',
     authSecret: process.env.AUTH_SECRET ?? 'secret',
+    authCookieName: process.env.AUTH_COOKIE_NAME ?? 'access_token',
+  },
+  storage: {
+    dir: process.env.STORAGE_DIR ?? './uploads',
   },
 });
 export default config;

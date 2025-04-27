@@ -3,12 +3,15 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { AuthTokenDTO } from './auth-token.dto';
+import { Response } from 'express';
+import { AppConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private config: AppConfigService,
   ) {}
 
   async validateUser(email: string, pass: string) {
@@ -36,6 +39,7 @@ export class AuthService {
   async forceLogin(
     email: string,
     name: string,
+    picture: string,
     password: string,
   ): Promise<AuthTokenDTO> {
     let user = await this.usersService.findOneByEmail(email);
@@ -43,6 +47,7 @@ export class AuthService {
       user = await this.usersService.create({
         email: email,
         name: name,
+        picture: picture,
         password: password,
       });
     }
@@ -50,5 +55,16 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  writeCookie(res: Response, token: AuthTokenDTO) {
+    res.cookie(this.config.site.authCookieName, token.access_token, {
+      domain: this.config.site.commonDomain,
+    });
+  }
+  clearCookie(res: Response) {
+    res.clearCookie(this.config.site.authCookieName, {
+      domain: this.config.site.commonDomain,
+    });
   }
 }

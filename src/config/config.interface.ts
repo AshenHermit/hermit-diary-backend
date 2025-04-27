@@ -11,5 +11,9 @@ export interface AppConfig {
     commonDomain: string;
     host: string;
     authSecret: string;
+    authCookieName: string;
+  };
+  storage: {
+    dir: string;
   };
 }
