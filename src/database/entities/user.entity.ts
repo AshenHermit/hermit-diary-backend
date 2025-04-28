@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { SocialLink } from './social-link.entity';
 
 @Entity()
 export class User {
@@ -22,6 +23,10 @@ export class User {
   @Column()
   name: string;
 
+  @ApiProperty({ type: String, example: '1990-05-15' })
+  @Column({ type: 'date', nullable: true, default: null })
+  birthday: Date;
+
   @ApiProperty({
     example: 'https://site.com/picture.webp',
     description: 'picture',
@@ -35,4 +40,9 @@ export class User {
   })
   @Column({ default: 'email' })
   service: 'email' | 'google' | 'vk' | 'yandex' | 'github';
+
+  @OneToMany(() => SocialLink, (socialLink) => socialLink.user, {
+    cascade: true,
+  })
+  socialLinks: [SocialLink];
 }

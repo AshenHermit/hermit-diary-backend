@@ -1,5 +1,7 @@
 import {
   Controller,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
   UploadedFile,
   UseGuards,
@@ -31,7 +33,14 @@ export class FilesController {
   @ApiOkResponse({
     type: FileUploadResultDTO,
   })
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 })],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
     return this.fileService.handleFileUpload(file);
   }
 }

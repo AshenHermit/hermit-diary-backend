@@ -10,6 +10,7 @@ import { UpdateUserDTO } from './update-user.dto';
 export class UsersService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(User) private socialLinksRepository: Repository<User>,
   ) {}
 
   async create(createUserDto: CreateUserDTO): Promise<User> {
@@ -28,8 +29,12 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  async findOneById(id: number): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
+  }
+
   async update(id: number, updateUserDto: UpdateUserDTO): Promise<void> {
-    const { password, name, picture } = updateUserDto;
+    const { password, name, picture, ...other } = updateUserDto;
     const hashedPassword = password
       ? await bcrypt.hash(password, 10)
       : undefined;
@@ -37,6 +42,7 @@ export class UsersService {
       ...(password && { password: hashedPassword }),
       ...(name && { name }),
       ...(picture && { picture }),
+      ...other,
     });
   }
 
