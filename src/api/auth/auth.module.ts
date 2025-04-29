@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtSilentStrategy, JwtStrategy } from './jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { GoogleStrategy } from './google/auth-google.strategy';
@@ -25,7 +25,7 @@ import { AppConfigService } from 'src/config/config.service';
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, JwtSilentStrategy, GoogleStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

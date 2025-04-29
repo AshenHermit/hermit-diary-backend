@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { SocialLink } from './social-link.entity';
+import { Diary } from './diary.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -16,7 +18,8 @@ export class User {
   email: string;
 
   @ApiProperty({ example: 'hashpass', description: 'Хэшированный пароль' })
-  @Column()
+  @Column({ select: false })
+  @Exclude({ toClassOnly: true })
   password: string;
 
   @ApiProperty({ example: 'Anna Lord', description: 'Имя пользователя' })
@@ -45,4 +48,9 @@ export class User {
     cascade: true,
   })
   socialLinks: [SocialLink];
+
+  @OneToMany(() => Diary, (diary) => diary.user, {
+    cascade: true,
+  })
+  diaries: [Diary];
 }

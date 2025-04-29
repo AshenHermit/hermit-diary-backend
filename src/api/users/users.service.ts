@@ -10,7 +10,6 @@ import { UpdateUserDTO } from './update-user.dto';
 export class UsersService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
-    @InjectRepository(User) private socialLinksRepository: Repository<User>,
   ) {}
 
   async create(createUserDto: CreateUserDTO): Promise<User> {
