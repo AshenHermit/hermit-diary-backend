@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
@@ -34,6 +34,25 @@ export class DiariesService {
   constructor(
     @InjectRepository(Diary) private diariesRepository: Repository<Diary>,
   ) {}
+
+  async assertDiaryWriteAccess(user: User, diary: Diary) {
+    if (user.id != diary.user.id) throw new UnauthorizedException('no access');
+  }
+  async assertDiaryReadAccess(user: User | undefined, diary: Diary) {
+    if (diary.isPublic) return;
+    if (user) {
+      if (user.id == diary.user.id) return;
+    }
+    throw new UnauthorizedException('no access');
+  }
+
+  async getById(diaryId: number) {
+    const diary = await this.diariesRepository.findOne({
+      where: { id: diaryId },
+      relations: ['user'],
+    });
+    return diary;
+  }
 
   async getOfUser(userId: number, onlyPublic: boolean = true) {
     const diaries = await this.diariesRepository.find({

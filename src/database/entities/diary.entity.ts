@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { User } from './user.entity';
+import { Note } from './note.entity';
 
 @Entity()
 export class Diary {
@@ -28,4 +35,7 @@ export class Diary {
 
   @ManyToOne(() => User, (user) => user.diaries, { onDelete: 'CASCADE' })
   user: User;
+
+  @OneToMany(() => Note, (note) => note.diary, { cascade: true })
+  notes: Note;
 }

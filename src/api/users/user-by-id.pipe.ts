@@ -10,7 +10,7 @@ import { UsersService } from './users.service';
 export class UserByIdPipe implements PipeTransform {
   constructor(private readonly usersService: UsersService) {}
   async transform(value: string) {
-    const user = await this.usersService.findOneById(Number(value));
+    const user = await this.usersService.getById(Number(value));
     if (!user) {
       throw new NotFoundException(`user with id ${value} not found`);
     }

@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../users/users.service';
 import { User } from 'src/database/entities/user.entity';
 import { AppConfigService } from 'src/config/config.service';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -56,5 +57,5 @@ export interface AuthenticatedRequest extends Request {
   user: User;
 }
 export interface SilentAuthRequest extends Request {
-  user: User | null;
+  user: User | undefined;
 }
