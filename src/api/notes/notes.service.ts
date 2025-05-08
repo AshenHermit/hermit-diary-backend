@@ -4,6 +4,21 @@ import { Note } from 'src/database/entities/note.entity';
 import { User } from 'src/database/entities/user.entity';
 import { Brackets, Repository } from 'typeorm';
 import { Diary } from 'src/database/entities/diary.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+
+export class UpdateNoteDTO {
+  @ApiProperty({ example: 'Untitled', description: 'name', required: false })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  name?: string;
+
+  @ApiProperty({ example: 'true', description: 'is public', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+}
 
 @Injectable()
 export class NotesService {
@@ -11,8 +26,10 @@ export class NotesService {
     @InjectRepository(Note) private notesRepository: Repository<Note>,
   ) {}
 
-  async assertNoteWriteAccess(user: User, note: Note) {
-    if (user.id != note.diary.user.id)
+  async assertNoteWriteAccess(user: User, noteId: number) {
+    const note = await this.getByIdForUser(noteId, user);
+
+    if (!note || user.id != note.diary.user.id)
       throw new UnauthorizedException('no access');
   }
   async assertNoteReadAccess(user: User | undefined, note: Note) {
@@ -27,10 +44,12 @@ export class NotesService {
     noteId,
     user,
     diaryId,
+    selectUser,
   }: {
     noteId?: number;
     user?: User;
     diaryId?: number;
+    selectUser?: boolean;
   }) {
     let query = this.notesRepository.createQueryBuilder('note');
     if (diaryId !== undefined) {
@@ -38,7 +57,11 @@ export class NotesService {
     } else {
       query = query.innerJoinAndSelect('note.diary', 'diary');
     }
-    query = query.innerJoin('diary.user', 'user');
+    if (selectUser) {
+      query = query.innerJoinAndSelect('diary.user', 'user');
+    } else {
+      query = query.innerJoin('diary.user', 'user');
+    }
     if (user !== undefined) {
       query = query.where(
         new Brackets((qb) => {
@@ -65,7 +88,9 @@ export class NotesService {
   }
 
   async getByIdForUser(noteId: number, user: User | undefined) {
-    return (await this.selectQuery({ noteId, user })).getOne();
+    return (
+      await this.selectQuery({ noteId, user, selectUser: true })
+    ).getOne();
   }
 
   async fetch(params: Parameters<typeof this.selectQuery>[0]) {
@@ -76,5 +101,13 @@ export class NotesService {
     const newNote = this.notesRepository.create({ diary });
     const savedNote = await this.notesRepository.save(newNote);
     return savedNote;
+  }
+
+  async updateDiary(id: number, updateDto: UpdateNoteDTO) {
+    await this.notesRepository.update(id, updateDto);
+  }
+
+  async deleteDiary(id: number) {
+    await this.notesRepository.delete(id);
   }
 }
