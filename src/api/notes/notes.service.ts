@@ -5,7 +5,13 @@ import { User } from 'src/database/entities/user.entity';
 import { Brackets, Repository } from 'typeorm';
 import { Diary } from 'src/database/entities/diary.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsJSON,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateNoteDTO {
   @ApiProperty({ example: 'Untitled', description: 'name', required: false })
@@ -13,6 +19,15 @@ export class UpdateNoteDTO {
   @IsString()
   @MinLength(1)
   name?: string;
+
+  @ApiProperty({
+    example: '{}',
+    description: 'content tree data',
+    required: false,
+  })
+  @IsOptional()
+  @IsJSON()
+  content?: Record<string, any>;
 
   @ApiProperty({ example: 'true', description: 'is public', required: false })
   @IsOptional()
@@ -45,11 +60,13 @@ export class NotesService {
     user,
     diaryId,
     selectUser,
+    verbose,
   }: {
     noteId?: number;
     user?: User;
     diaryId?: number;
     selectUser?: boolean;
+    verbose?: boolean;
   }) {
     let query = this.notesRepository.createQueryBuilder('note');
     if (diaryId !== undefined) {
@@ -84,12 +101,13 @@ export class NotesService {
     if (diaryId !== undefined) {
       query = query.andWhere('diary.id = :diaryId', { diaryId });
     }
+    if (verbose) query = query.addSelect('note.content');
     return query;
   }
 
   async getByIdForUser(noteId: number, user: User | undefined) {
     return (
-      await this.selectQuery({ noteId, user, selectUser: true })
+      await this.selectQuery({ noteId, user, selectUser: true, verbose: true })
     ).getOne();
   }
 

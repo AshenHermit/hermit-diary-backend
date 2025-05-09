@@ -20,6 +20,13 @@ export class Note {
   @Column({ default: true })
   isPublic: boolean;
 
+  @ApiProperty({
+    example: 'true',
+    description: 'is public',
+  })
+  @Column({ nullable: true, default: null, type: 'jsonb', select: false })
+  content: Record<string, any>;
+
   @ManyToOne(() => Diary, (diary) => diary.notes, { onDelete: 'CASCADE' })
   diary: Diary;
 }
