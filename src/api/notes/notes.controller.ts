@@ -41,6 +41,24 @@ export class NotesController {
     return await this.notesService.getByIdForUser(noteId, req.user);
   }
 
+  @UseSilentAuthQuard()
+  @ApiParam({ name: 'noteId', type: Number })
+  @ApiOkResponse({ schema: { type: 'boolean' } })
+  @Get(':noteId/write_permission')
+  async getWritePermission(
+    @Param('noteId', new ParseIntPipe()) noteId: number,
+    @Req() req: SilentAuthRequest,
+  ) {
+    if (!req.user) return false;
+    try {
+      await this.notesService.assertNoteWriteAccess(req.user, noteId);
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+    return true;
+  }
+
   @UseAuthQuard()
   @ApiOkResponse({ schema: { type: 'boolean' } })
   @ApiParam({ name: 'noteId', type: Number })
@@ -51,7 +69,7 @@ export class NotesController {
     @Body() data: UpdateNoteDTO,
   ) {
     await this.notesService.assertNoteWriteAccess(req.user, noteId);
-    await this.notesService.updateDiary(noteId, data);
+    await this.notesService.updateNote(noteId, data, req.user);
     return true;
   }
 
@@ -64,7 +82,7 @@ export class NotesController {
     @Req() req: AuthenticatedRequest,
   ) {
     await this.notesService.assertNoteWriteAccess(req.user, noteId);
-    await this.notesService.deleteDiary(noteId);
+    await this.notesService.deleteNote(noteId);
     return true;
   }
 }

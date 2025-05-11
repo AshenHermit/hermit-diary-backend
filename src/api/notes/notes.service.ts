@@ -1,8 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Note } from 'src/database/entities/note.entity';
 import { User } from 'src/database/entities/user.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { Diary } from 'src/database/entities/diary.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -12,6 +16,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { NoteContentService } from './note-content.service';
 
 export class UpdateNoteDTO {
   @ApiProperty({ example: 'Untitled', description: 'name', required: false })
@@ -39,6 +44,7 @@ export class UpdateNoteDTO {
 export class NotesService {
   constructor(
     @InjectRepository(Note) private notesRepository: Repository<Note>,
+    private readonly noteContentService: NoteContentService,
   ) {}
 
   async assertNoteWriteAccess(user: User, noteId: number) {
@@ -74,6 +80,8 @@ export class NotesService {
     } else {
       query = query.innerJoinAndSelect('note.diary', 'diary');
     }
+    query = query.leftJoinAndSelect('note.outcomingLinks', 'outcomingLink');
+    query = query.leftJoinAndSelect('note.incomingLinks', 'incomingLink');
     if (selectUser) {
       query = query.innerJoinAndSelect('diary.user', 'user');
     } else {
@@ -121,11 +129,56 @@ export class NotesService {
     return savedNote;
   }
 
-  async updateDiary(id: number, updateDto: UpdateNoteDTO) {
+  async updateNote(id: number, updateDto: UpdateNoteDTO, user: User) {
     await this.notesRepository.update(id, updateDto);
+    if (updateDto.content) {
+      await this.updateLinks(id, updateDto.content, user);
+    }
+    if (updateDto.name) {
+      await this.updateNames(id, user);
+    }
+  }
+  async updateLinks(id: number, content: UpdateNoteDTO['content'], user: User) {
+    if (!content) return;
+    const note = await this.notesRepository.findOne({
+      where: { id: id },
+      relations: { outcomingLinks: true },
+    });
+    if (!note) throw new NotFoundException('Заметка не найдена');
+
+    const links = await this.noteContentService.findOutcomingLinks(content);
+
+    for (let i = 0; i < links.length; i++) {
+      const linkedNote = links[i];
+      await this.assertNoteWriteAccess(user, linkedNote.id);
+    }
+
+    note.outcomingLinks = links;
+
+    return this.notesRepository.save(note);
+  }
+  async updateNames(id: number, user: User) {
+    const note = await this.notesRepository.findOne({
+      where: { id: id },
+      relations: { incomingLinks: true },
+    });
+    if (note) {
+      const incomingNotes = note.incomingLinks;
+      for (let i = 0; i < incomingNotes.length; i++) {
+        const inNoteObj = incomingNotes[i];
+        const incomingNote = await this.getByIdForUser(inNoteObj.id, user);
+
+        if (incomingNote) {
+          await this.noteContentService.updateOutcomingLinks(
+            incomingNote.content,
+          );
+          await this.notesRepository.save(incomingNote);
+        }
+      }
+    }
   }
 
-  async deleteDiary(id: number) {
+  async deleteNote(id: number) {
     await this.notesRepository.delete(id);
   }
 }
