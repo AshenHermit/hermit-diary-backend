@@ -18,10 +18,14 @@ import { User } from 'src/database/entities/user.entity';
 import { UserByIdPipe } from '../users/user-by-id.pipe';
 import { DiaryByIdPipe } from './diary-by-id.pipe';
 import { Note } from 'src/database/entities/note.entity';
+import { PropertiesService } from '../properties/properties.service';
 
 @Controller('api/diaries')
 export class DiariesController {
-  constructor(private readonly diariesService: DiariesService) {}
+  constructor(
+    private readonly diariesService: DiariesService,
+    private readonly propertiesService: PropertiesService,
+  ) {}
 
   @UseSilentAuthQuard()
   @ApiParam({ name: 'diaryId', type: Number })
@@ -75,6 +79,7 @@ export class DiariesController {
     @Req() req: AuthenticatedRequest,
   ) {
     await this.diariesService.assertDiaryWriteAccess(req.user, diary);
+    await this.propertiesService.removePropertiesOfTarget('diary', diary.id);
     await this.diariesService.deleteDiary(diary.id);
     return true;
   }
