@@ -42,6 +42,18 @@ export class PropertiesService {
     return properties;
   }
 
+  async getEntitiesForMultipleTargets(
+    targetType: PropertyTargetType,
+    targetIds: number[],
+  ) {
+    const properties = await this.propertiesRepository
+      .createQueryBuilder('prop')
+      .where('prop.targetType = :targetType', { targetType })
+      .andWhere('prop.targetId IN (:...targetIds)', { targetIds })
+      .getMany();
+    return properties;
+  }
+
   async getPropertiesForTarget(
     targetType: PropertyTargetType,
     targetId: number,
@@ -53,6 +65,28 @@ export class PropertiesService {
 
     entities.forEach((ent) => {
       props.properties[ent.key] = ent.value;
+    });
+
+    return props;
+  }
+
+  async getPropertiesForMultipleTargets(
+    targetType: PropertyTargetType,
+    targetIds: number[],
+  ): Promise<Record<number, PropertiesDto>> {
+    const entities = await this.getEntitiesForMultipleTargets(
+      targetType,
+      targetIds,
+    );
+
+    const props: Record<number, PropertiesDto> = {};
+
+    targetIds.forEach((id) => {
+      props[id] = { properties: {} };
+    });
+
+    entities.forEach((ent) => {
+      props[ent.targetId].properties[ent.key] = ent.value;
     });
 
     return props;

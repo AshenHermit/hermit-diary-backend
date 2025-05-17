@@ -17,6 +17,10 @@ import {
   MinLength,
 } from 'class-validator';
 import { NoteContentService } from './note-content.service';
+import {
+  PropertiesDto,
+  PropertiesService,
+} from '../properties/properties.service';
 
 export class UpdateNoteDTO {
   @ApiProperty({ example: 'Untitled', description: 'name', required: false })
@@ -38,6 +42,14 @@ export class UpdateNoteDTO {
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
+
+  properties?: PropertiesDto['properties'];
+}
+
+export class NoteWithPropsDTO {
+  name?: string;
+  content?: Record<string, any>;
+  isPublic?: boolean;
 }
 
 @Injectable()
@@ -45,6 +57,7 @@ export class NotesService {
   constructor(
     @InjectRepository(Note) private notesRepository: Repository<Note>,
     private readonly noteContentService: NoteContentService,
+    private readonly propertiesService: PropertiesService,
   ) {}
 
   async assertNoteWriteAccess(user: User, noteId: number) {
@@ -114,13 +127,34 @@ export class NotesService {
   }
 
   async getByIdForUser(noteId: number, user: User | undefined) {
-    return (
+    const note = await (
       await this.selectQuery({ noteId, user, selectUser: true, verbose: true })
     ).getOne();
+    if (note) {
+      const properties = await this.propertiesService.getPropertiesForTarget(
+        'note',
+        noteId,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (note as any).properties = properties.properties;
+    }
+    return note;
   }
 
-  async fetch(params: Parameters<typeof this.selectQuery>[0]) {
-    return (await this.selectQuery(params)).getMany();
+  async fetch(params: Parameters<typeof this.selectQuery>[0]): Promise<Note[]> {
+    const notes = await (await this.selectQuery(params)).getMany();
+    const props = await this.propertiesService.getPropertiesForMultipleTargets(
+      'note',
+      notes.map((x) => x.id),
+    );
+
+    for (let i = 0; i < notes.length; i++) {
+      const note = notes[i];
+      const properties = props[note.id].properties;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (note as any).properties = properties;
+    }
+    return notes;
   }
 
   async addNote(diary: Diary) {
@@ -130,7 +164,15 @@ export class NotesService {
   }
 
   async updateNote(id: number, updateDto: UpdateNoteDTO, user: User) {
-    await this.notesRepository.update(id, updateDto);
+    const { properties, ...updateData } = updateDto;
+
+    await this.notesRepository.update(id, updateData);
+
+    if (updateDto.properties) {
+      await this.propertiesService.updatePropertiesForTarget('note', id, {
+        properties: updateDto.properties,
+      });
+    }
     if (updateDto.content) {
       await this.updateLinks(id, updateDto.content, user);
     }
